@@ -26,12 +26,17 @@ struct HistoryView: View {
         VStack(spacing: 0) {
             // Toolbar
             HStack(spacing: 8) {
-                Image(systemName: "magnifyingglass")
-                    .foregroundStyle(.secondary)
-                    .imageScale(.small)
-                TextField("Search", text: $query)
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 12))
+                HStack(spacing: 5) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.secondary)
+                        .imageScale(.small)
+                    TextField("Search", text: $query)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 12))
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(.quaternary, in: Capsule(style: .continuous))
 
                 if !store.entries.isEmpty {
                     Button("Clear", role: .destructive) {

@@ -277,16 +277,39 @@ private struct DictatePill<Content: View>: View {
             .padding(.vertical, 4)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background {
-                // Capsule mask on vibrancy = elliptical ends at any height.
-                VisualEffectCapsule(material: .hudWindow)
+                // Capsule backdrop: native Liquid Glass on macOS 26+, vibrancy before.
+                if #available(macOS 26.0, *) {
+                    GlassCapsule()
+                } else {
+                    VisualEffectCapsule(material: .hudWindow)
+                }
             }
             .clipShape(Capsule(style: .continuous))
             .overlay {
-                Capsule(style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.22), lineWidth: 0.5)
+                // Glass ships its own specular edge; stroke only the vibrancy path.
+                if #available(macOS 26.0, *) {
+                    EmptyView()
+                } else {
+                    Capsule(style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.22), lineWidth: 0.5)
+                }
             }
             .shadow(color: .black.opacity(0.20), radius: 6, y: 2)
             .padding(2)
+    }
+}
+
+// MARK: - Backdrops
+
+/// Native Liquid-Glass capsule (macOS 26+); radius follows height so ends stay round.
+@available(macOS 26.0, *)
+private struct GlassCapsule: NSViewRepresentable {
+    func makeNSView(context: Context) -> GlassCapsuleEffectView {
+        GlassCapsuleEffectView()
+    }
+
+    func updateNSView(_ view: GlassCapsuleEffectView, context: Context) {
+        view.needsLayout = true
     }
 }
 
@@ -311,6 +334,7 @@ private struct VisualEffectCapsule: NSViewRepresentable {
     }
 }
 
+/// True capsule: radius = half height.
 private final class CapsuleEffectView: NSVisualEffectView {
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -326,6 +350,28 @@ private final class CapsuleEffectView: NSVisualEffectView {
         super.layout()
         // True capsule: radius = half height → elliptical / 半圆端.
         layer?.cornerRadius = bounds.height / 2
+    }
+}
+
+/// Liquid-Glass backdrop with the same capsule silhouette.
+@available(macOS 26.0, *)
+private final class GlassCapsuleEffectView: NSGlassEffectView {
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        style = .regular
+        // Empty sticker keeps the glass backdrop independent of pill content.
+        let sticker = NSView()
+        sticker.wantsLayer = true
+        sticker.layer?.backgroundColor = NSColor.clear.cgColor
+        contentView = sticker
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func layout() {
+        super.layout()
+        cornerRadius = bounds.height / 2
     }
 }
 
@@ -377,11 +423,11 @@ private struct CompactWaveform: View {
                     )
                 }
             }
-            .onChange(of: timeline.date) { _ in
+            .onChange(of: timeline.date) { _, _ in
                 tick(level: level)
             }
         }
-        .onChange(of: level) { newValue in
+        .onChange(of: level) { _, newValue in
             let amp = displayAmp(newValue)
             if !bars.isEmpty {
                 bars[bars.count - 1] = max(bars[bars.count - 1], amp)

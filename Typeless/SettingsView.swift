@@ -131,9 +131,9 @@ struct SettingsView: View {
                 checkAccessibilityPermission()
             }
         }
-        .onChange(of: selectedModel) { applyModel($0) }
-        .onChange(of: selectedLanguage) { applyLanguage($0) }
-        .onChange(of: selectedDeviceIndex) { applyDevice($0) }
+        .onChange(of: selectedModel) { _, model in applyModel(model) }
+        .onChange(of: selectedLanguage) { _, language in applyLanguage(language) }
+        .onChange(of: selectedDeviceIndex) { _, index in applyDevice(index) }
         .alert(
             NSLocalizedString("settings.reset.confirmation.title", comment: ""),
             isPresented: $showResetConfirmation

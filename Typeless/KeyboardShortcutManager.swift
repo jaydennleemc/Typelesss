@@ -130,7 +130,7 @@ final class KeyboardShortcutManager {
         )
         guard status == noErr else { return }
 
-        var hotKeyID = EventHotKeyID(signature: OSType(0x54504C53), id: 1)
+        let hotKeyID = EventHotKeyID(signature: OSType(0x54504C53), id: 1)
         _ = RegisterEventHotKey(
             parsed.keyCode,
             parsed.carbonModifiers,
